@@ -1,40 +1,60 @@
 
-$radius = 77;
-$radius_delta = 7;
+$side_length = 96;
+
+$radius = $side_length / 1.175;
+$inradius = $side_length / (2*tan(36));
+
 $thickness = 10;
 $thinness = 1;
 
-// the big rgb leds are diameter 10.
-// this is roughly their shape.
+$temp_height = $side_length * 1.1135;
+
 module led() {
-  sphere(5);
-  cylinder($thickness + 1,5,5);
+  sphere(d=8);
+  cylinder(5,4,4);
+  translate([0,0,5]) {
+    cylinder(2,9.25/2,9.25/2);
+  }
 }
 
-// 18 degrees is (90-(360/5)) and aligns the hex
-// to drop the leds in correctly.
-rotate([0,0,-18]) {
     difference() {
     //create the hexagon
-    rotate([0,0,18]) {
-      cylinder(h = $thickness,
+            cylinder(h = $temp_height,
                r1 = $radius,
-               r2 = $radius - $radius_delta,
+               r2 = 0,
                $fn = 5);
-    }
-
+        
+      translate([0,0,$thickness]) {
+        cylinder(h = $temp_height,
+        r1 = $radius,
+        r2 = 0,
+        $fn = 5);
+      }    
+    
   //punch out the center led
   translate([0,0,5 + $thinness]) {
     led();
   }
   
   // punch out the 5 ledsaround the edge.
-  for(i = [0 : 4]) {
-    rotate([0,0,(360/5)*i]) {
-      translate([0,$radius*0.66,5 + $thinness]) {
-        led();
+  rotate([0,0,-18]) {
+    for(i = [0 : 4]) {
+      rotate([0,0,(360/5)*i]) {
+        translate([0,$radius*0.66,5 + $thinness]) {
+          led();
+        }
       }
     }
   }
-}
+  
+  // punch out a butterfly dado
+    $dado_length = $side_length/5;
+    translate([-$inradius,0,-1]) {
+      rotate([0,0,60]) {
+        cylinder(h = $thickness+2,
+        r1 = $dado_length,
+        r2 = $dado_length,
+        $fn = 3);
+    }
+  }
 }

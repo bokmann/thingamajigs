@@ -19,21 +19,11 @@ module rgb_led(body_diameter) {
   }
 }
 
-
 function dado_size() = $side_length/4;
 
-
-module half_dado() {
-  cylinder($thickness+2,
-           dado_size(),
-           dado_size(),
-           $fn = 3);
-
-}
-  
- if ($shape == "plate") {
-    difference() {
-      //create the hexagon
+module hex_plate() {
+  difference() {
+          //create the hexagon
       cylinder(h = $temp_height,
                r1 = $radius,
                r2 = 0,
@@ -45,35 +35,25 @@ module half_dado() {
         r2 = 0,
         $fn = 5);
       }    
-    
-    //punch out the center led
-    translate([0,0,5 + $thinness]) {
-      rgb_led(8.5);
-    }
-  
-    // punch out the 5 ledsaround the edge.
-    rotate([0,0,-18]) {
-      for(i = [0 : 4]) {
-        rotate([0,0,(360/5)*i]) {
-          translate([0,$radius*0.66,5 + $thinness]) {
-            rgb_led(8.5);
-          }
-        }
-      }
-    }
-  
-    // punch out a butterfly dado
-    for(i = [0 : 4]) {
-      rotate([0,0,(360/5)*i]) {
-        translate([-$inradius,0,-1]) {
-          rotate([0,0,60]) {
-            half_dado();
-          }
-        }
-      }
-    }
+      
   }
+  }
+  
+module dado_triangle() {
+  cylinder($thickness*2,
+           dado_size(),
+           dado_size(),
+           $fn = 3);
+
 }
+
+module dado_wedge() {
+    rotate([0,115.86-90,0]) {  
+            rotate([0,0,60]) {
+              dado_triangle();
+            }
+          }
+      }
 
 module dado_chunk() {
   difference() {
@@ -94,22 +74,64 @@ module dado_chunk() {
 
 
 
-if ($shape == "dado") {
-  c_radius = 0;
-  i_radius = 0;
-  $distance = (0.577 / dado_size()) * 0.288;
+
+
+
+
+
+ if ($shape == "plate") {
+    difference() {
+
+    hex_plate();
+    
+    //punch out the center led
+    translate([0,0,5 + $thinness]) {
+      rgb_led(8.5);
+    }
   
-  rotate([0,(90-115.56),0]) {
-    translate([0,0,-($thickness+2)]) {
-     dado_chunk();
+    // punch out the 5 ledsaround the edge.
+    rotate([0,0,-18]) {
+      for(i = [0 : 4]) {
+        rotate([0,0,(360/5)*i]) {
+          translate([0,$radius*0.66,5 + $thinness]) {
+            rgb_led(8.5);
+          }
+        }
+      }
+    }
+    
+    // punch out a butterfly dado
+    for(i = [0 : 4]) {
+      rotate([0,0,(360/5)*i]) {
+        translate([-$inradius,0,-1]) {
+          dado_wedge();
+        }
+      }
     }
   }
-  
-  translate([$distance,0,0]) {
-    rotate([0,(90-115.56),180]) {
-      translate([0,0,-($thickness+2)]) {
-        dado_chunk();
+}
+    
+
+module half_dado() {
+    // why 0.65?
+    translate([$inradius+0.65,0,1]) {
+    intersection() {
+      hex_plate();
+      translate([-$inradius,0,-1]) {
+        dado_wedge();
       }
+    }
+  }}
+
+
+if ($shape == "dado") {
+  rotate([0,-(180-116.56)/2,0]) {
+    half_dado();
+  }
+  
+  rotate([0,(180-116.56)/2,0]) {
+    rotate([0,0,180]) {
+        half_dado();
     }
   }
 }

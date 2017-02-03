@@ -74,6 +74,16 @@ module dado_chunk() {
 
 
 
+module half_dado() {
+    // why 0.65?
+    translate([$inradius+0.65,0,1]) {
+    intersection() {
+      hex_plate();
+      translate([-$inradius,0,-1]) {
+        dado_wedge();
+      }
+    }
+  }}
 
 
 
@@ -112,19 +122,11 @@ module dado_chunk() {
 }
     
 
-module half_dado() {
-    // why 0.65?
-    translate([$inradius+0.65,0,1]) {
-    intersection() {
-      hex_plate();
-      translate([-$inradius,0,-1]) {
-        dado_wedge();
-      }
-    }
-  }}
 
 
 if ($shape == "dado") {
+     rotate([0,-(180-116.56)/2,0]) {
+ 
   rotate([0,-(180-116.56)/2,0]) {
     half_dado();
   }
@@ -133,5 +135,6 @@ if ($shape == "dado") {
     rotate([0,0,180]) {
         half_dado();
     }
+  }
   }
 }

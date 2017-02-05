@@ -1,15 +1,21 @@
-$shape = "dado"; // "plate" or "dado"
-$side_length = 90;
+// variables you control
+
+$shape = "prototype"; // "plate" or "dado"
+$side_length = 50;
+$thickness = 4;
+$leds = 0;
 
 
-
+// things to change only if you're changing the code
 $radius = $side_length / 1.175;
+$sides = 5;
 $inradius = $side_length / (2*tan(36));
+$dihedral = 116.56;
+$rgb_led_dimension = 8.5;
+$led_delta = .5;
 
-$thickness = 10;
-$thinness = 1;
 
-$temp_height = $side_length * 1.1135;
+$cone_height = $side_length * 1.1135;
 
 module rgb_led(body_diameter) {
   sphere(d=body_diameter);
@@ -21,99 +27,77 @@ module rgb_led(body_diameter) {
 
 function dado_size() = $side_length/4;
 
-module hex_plate() {
+module plate() {
   difference() {
-          //create the hexagon
-      cylinder(h = $temp_height,
+      cylinder(h = $cone_height,
                r1 = $radius,
                r2 = 0,
-               $fn = 5);
+               $fn = $sides);
         
       translate([0,0,$thickness]) {
-        cylinder(h = $temp_height,
+        cylinder(h = $cone_height,
         r1 = $radius,
         r2 = 0,
-        $fn = 5);
+        $fn = $sides);
       }    
       
   }
-  }
+}
   
 module dado_triangle() {
   cylinder($thickness*2,
            dado_size(),
            dado_size(),
            $fn = 3);
-
 }
 
 module dado_wedge() {
-    rotate([0,115.86-90,0]) {  
-            rotate([0,0,60]) {
-              dado_triangle();
-            }
-          }
+   rotate([0,$dihedral-90,0]) {  
+      rotate([0,0,60]) {
+        dado_triangle();
       }
+   }
+}
 
-module dado_chunk() {
-  difference() {
-    half_dado();
-  //  rotate([0,(115.56*2)-180,0]) {
-      
-//      translate([-$inradius/2,-$inradius/2,$thickness+2]) {
-//        cube($inradius);
-//      }
-
-      translate([0,-$inradius/2,-$inradius/2]) {
-        cube($inradius);
+module half_dado() {
+    translate([$inradius,0,0]) {
+    intersection() {
+      plate();
+      translate([-$inradius,0,0]) {
+        dado_wedge();
       }
-      
-//  }
-  }  
+    }
+  }
 }
 
 
 
-module half_dado() {
-    // why 0.65?
-    translate([$inradius+0.65,0,1]) {
-    intersection() {
-      hex_plate();
-      translate([-$inradius,0,-1]) {
-        dado_wedge();
-      }
-    }
-  }}
 
-
-
-
-
+// draw the plate for the dodecahedron
  if ($shape == "plate") {
-    difference() {
-
-    hex_plate();
-    
+  difference() {
+    plate();
+   
     //punch out the center led
-    translate([0,0,5 + $thinness]) {
-      rgb_led(8.5);
+    translate([0,0,$rgb_led_dimension/2]) {
+      rgb_led($rgb_led_dimension-$led_delta);
     }
-  
+    
     // punch out the 5 ledsaround the edge.
     rotate([0,0,-18]) {
-      for(i = [0 : 4]) {
+      for(i = [0 : $sides - 1]) {
         rotate([0,0,(360/5)*i]) {
-          translate([0,$radius*0.66,5 + $thinness]) {
-            rgb_led(8.5);
+          translate([0,$radius*0.66,$rgb_led_dimension/2]) {
+            rgb_led($rgb_led_dimension-$led_delta);
           }
         }
       }
     }
     
     // punch out a butterfly dado
-    for(i = [0 : 4]) {
-      rotate([0,0,(360/5)*i]) {
-        translate([-$inradius,0,-1]) {
+    for(i = [0 : $sides - 1]) {
+      rotate([0,0,(360/$sides)*i]) {
+        translate([-$inradius,0,0]) {
           dado_wedge();
         }
       }
@@ -123,18 +107,41 @@ module half_dado() {
     
 
 
-
+// draw the dado wedge to join plates together
 if ($shape == "dado") {
-     rotate([0,-(180-116.56)/2,0]) {
- 
-  rotate([0,-(180-116.56)/2,0]) {
     half_dado();
-  }
-  
-  rotate([0,(180-116.56)/2,0]) {
-    rotate([0,0,180]) {
-        half_dado();
+    rotate([180, -($dihedral) ,0]) {
+      half_dado();
     }
-  }
-  }
 }
+
+if ($shape == "prototype") {
+    difference() {
+    plate();
+   
+
+    // punch out a butterfly dado
+ *   translate([-$inradius,0,0]) {
+      dado_wedge();
+    }
+      rotate([0,0,(360/5)*2]) {
+        translate([-$inradius,0,0]) {
+          dado_wedge();
+        }
+    }     
+  }
+  //attach the  butterflies
+  //for(i = [0 : $sides - 1]) {
+
+  rotate([0,0,(360/5)*i]) {
+    translate([-$inradius,0,0]) {
+      rotate([180, -($dihedral), 0]) {
+        scale([.95,.95,.95]) {
+        half_dado();}
+      }
+   // }
+  }
+  }
+
+}
+
